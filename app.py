@@ -154,13 +154,8 @@ except Exception as e:
 # =====================================================
 
 if merged_df is None:
-
-
-st.info(
-    "Upload all three datasets or generate sample data."
-)
-
-st.stop()
+    st.info("Upload all three datasets or generate sample data.")
+    st.stop()
 
 
 # =====================================================
