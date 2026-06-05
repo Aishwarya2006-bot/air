@@ -101,48 +101,18 @@ Features:
 )
 
 # =====================================================
-
 # SIDEBAR
-
 # =====================================================
-
-st.sidebar.header(
-"📂 Upload Datasets"
-)
-
-wind_file = st.sidebar.file_uploader(
-"Wind Dataset",
-type=["csv"]
-)
-
-no2_file = st.sidebar.file_uploader(
-"NO₂ Dataset",
-type=["csv"]
-)
-
-lst_file = st.sidebar.file_uploader(
-"LST Dataset",
-type=["csv"]
-)
+st.sidebar.header("📂 Upload Datasets")
+wind_file = st.sidebar.file_uploader("Wind Dataset", type=["csv"])
+no2_file = st.sidebar.file_uploader("NO₂ Dataset", type=["csv"])
+lst_file = st.sidebar.file_uploader("LST Dataset", type=["csv"])
 
 use_sample_data = False
-
-if (
-wind_file is None
-or no2_file is None
-or lst_file is None
-):
-
-```
-st.sidebar.warning(
-    "Upload all 3 datasets or generate sample datasets."
-)
-
-if st.sidebar.button(
-    "Generate & Load 3 Sample Interrelated Datasets"
-):
-    use_sample_data = True
-```
+if (wind_file is None or no2_file is None or lst_file is None):
+    st.sidebar.warning("Upload all 3 datasets or generate sample datasets.")
+    if st.sidebar.button("Generate & Load 3 Sample Interrelated Datasets"):
+        use_sample_data = True
 
 # =====================================================
 
@@ -152,7 +122,6 @@ if st.sidebar.button(
 
 try:
 
-```
 if use_sample_data:
 
     wind_df, no2_df, lst_df = (
@@ -216,23 +185,22 @@ elif (
         no2_df,
         lst_df
     )
-```
+
 
 except KeyError as e:
 
-```
 st.error(
     f"Column Error: {e}"
 )
-```
+
 
 except ValueError as e:
 
-```
+
 st.error(
     f"Data Error: {e}"
 )
-```
+
 
 except Exception as e:
 
