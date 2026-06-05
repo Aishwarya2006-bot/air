@@ -312,3 +312,21 @@ def identify_temperature_columns(df):
             cols.append(col)
 
     return cols
+
+
+# =====================================================
+# GET NUMERIC COLUMNS
+# =====================================================
+
+def get_numeric_columns(df):
+    """
+    Get all numeric columns from the dataframe.
+    """
+    
+    numeric_cols = (
+        df.select_dtypes(
+            include=[np.number]
+        ).columns.tolist()
+    )
+    
+    return numeric_cols
