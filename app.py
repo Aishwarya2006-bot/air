@@ -881,7 +881,8 @@ with tab4:
             errors='ignore'
         ).select_dtypes(include=np.number)
 
-        numeric_df = numeric_df.dropna()
+        # Use dropna with threshold to keep rows with at least 50% data
+        numeric_df = numeric_df.dropna(thresh=numeric_df.shape[1] * 0.5)
 
         if numeric_df.shape[1] > 0 and numeric_df.shape[0] >= 4:
             pattern_results = build_pattern_recognition_pipeline(
