@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-
+from sklearn.impute import SimpleImputer
 import streamlit as st
 
 
@@ -52,72 +52,53 @@ def generate_cluster_labels(
 # =====================================================
 
 @st.cache_data
-def build_pattern_recognition_pipeline(
-    df,
-    n_clusters=4
-):
-
-    numeric_df = (
-        get_numeric_features(df)
-    )
-
-    if numeric_df.empty:
-
-        raise ValueError(
-            "No numeric features available for clustering."
-        )
-
+def build_pattern_recognition_pipeline(df, n_clusters=4):
+    """
+    Builds a clustering pipeline that handles missing values, scales features,
+    and runs KMeans clustering.
+    """
+    # 1. Select only numeric columns for clustering, dropping 'Cluster' if it exists
+    numeric_df = df.select_dtypes(include=[np.number]).copy()
+    if 'Cluster' in numeric_df.columns:
+        numeric_df = numeric_df.drop(columns=['Cluster'])
+        
+    features = numeric_df.columns.tolist()
+    
+    # 2. Impute missing values (NaNs) with the mean of each column
+    imputer = SimpleImputer(strategy='mean')
+    imputed_data = imputer.fit_transform(numeric_df)
+    
+    # 3. Scale the features
     scaler = StandardScaler()
-
-    scaled_data = scaler.fit_transform(
-        numeric_df
-    )
-
-    kmeans = KMeans(
-        n_clusters=n_clusters,
-        random_state=42,
-        n_init=10
-    )
-
-    clusters = kmeans.fit_predict(
-        scaled_data
-    )
-
-    clustered_df = (
-        df.loc[
-            numeric_df.index
-        ]
-        .copy()
-    )
-
-    clustered_df[
-        "Cluster"
-    ] = clusters
-
-    cluster_profiles = (
-        clustered_df
-        .groupby(
-            "Cluster"
-        )
-        .mean(
-            numeric_only=True
-        )
-    )
-
-    cluster_labels = (
-        generate_cluster_labels(
-            cluster_profiles
-        )
-    )
-
-    clustered_df[
-        "Cluster_Label"
-    ] = clustered_df[
-        "Cluster"
-    ].map(
-        cluster_labels
-    )
-
+    scaled_data = scaler.fit_transform(imputed_data)
+    
+    # 4. Fit KMeans
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+    cluster_labels = kmeans.fit_predict(scaled_data)
+    
+    # 5. Create output copies to avoid modifying original source dataframes
+    clustered_data = df.copy()
+    clustered_data['Cluster'] = cluster_labels
+    
+    # 6. Calculate cluster profiles (means) using the imputed data structure
+    imputed_df = pd.DataFrame(imputed_data, columns=features)
+    imputed_df['Cluster'] = cluster_labels
+    cluster_profiles = imputed_df.groupby('Cluster').mean()
+    
+    # 7. Mock an anomaly score dataframe for your app interface consistency
+    anomaly_data = clustered_data.copy()
+    # Calculate distance to cluster centers as an basic anomaly score
+    distances = kmeans.transform(scaled_data)
+    anomaly_data['anomaly_score'] = distances.min(axis=1)
+    # Mark the top 5% highest distances as anomalies
+    threshold = np.percentile(anomaly_data['anomaly_score'], 95)
+    anomaly_data['is_anomaly'] = anomaly_data['anomaly_score'] > threshold
+    
+    return {
+        "clustered_data": clustered_data,
+        "cluster_profiles": cluster_profiles,
+        "anomaly_data": anomaly_data
+    }
     # =====================================
     # ANOMALY DETECTION
     # =====================================
