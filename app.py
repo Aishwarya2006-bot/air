@@ -145,11 +145,10 @@ except Exception as e:
 
 except Exception as e:
 
-```
 st.error(
     f"Unexpected Error: {e}"
 )
-```
+
 
 # =====================================================
 
@@ -159,13 +158,13 @@ st.error(
 
 if merged_df is None:
 
-```
+
 st.info(
     "Upload all three datasets or generate sample data."
 )
 
 st.stop()
-```
+
 
 # =====================================================
 
@@ -175,7 +174,7 @@ st.stop()
 
 for col in merged_df.columns:
 
-```
+
 if col.lower() == "date":
     continue
 
@@ -206,7 +205,7 @@ if merged_df[col].dtype == "object":
         merged_df[col],
         errors="coerce"
     )
-```
+
 
 merged_df = (
 merged_df
@@ -252,7 +251,7 @@ merged_df
 
 tab1, tab2, tab3, tab4 = st.tabs(
 
-```
+
 [
 
     "📊 Data Fusion & KPIs",
@@ -264,7 +263,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
     "🤖 Pattern & Prediction"
 
 ]
-```
+
 
 )
 # =====================================================
@@ -275,7 +274,7 @@ tab1, tab2, tab3, tab4 = st.tabs(
 
 with tab1:
 
-```
+
 st.header(
     "📊 Data Fusion & KPI Dashboard"
 )
@@ -660,7 +659,7 @@ except Exception as e:
     st.error(
         f"Correlation extraction failed: {e}"
     )
-```
+
 # =====================================================
 # TAB 2 : CORRELATION ANALYTICS
 # =====================================================
