@@ -31,7 +31,6 @@ from utils.statistics import (
 )
 
 from utils.clustering import (
-    build_pattern_recognition_pipeline,
     calculate_cluster_distribution,
     environmental_event_detector,
     get_top_anomalies
@@ -42,6 +41,11 @@ from utils.forecasting import (
     forecast_future_values,
     get_feature_importance
 )
+
+# Additional imports for clustering
+from sklearn.cluster import KMeans
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
 
 # =====================================================
 # PAGE CONFIG
@@ -54,16 +58,29 @@ st.set_page_config(
 )
 
 # =====================================================
-# SAFE GLOBAL VARIABLES
+# SESSION STATE INITIALIZATION
 # =====================================================
 
-merged_df = None
-clustered_df = None
-pattern_results = None
-prediction_df = None
-model = None
-forecast_df = None
-metrics = None
+if "clustered_df" not in st.session_state:
+    st.session_state.clustered_df = None
+    
+if "pattern_results" not in st.session_state:
+    st.session_state.pattern_results = None
+    
+if "model" not in st.session_state:
+    st.session_state.model = None
+    
+if "metrics" not in st.session_state:
+    st.session_state.metrics = None
+    
+if "prediction_df" not in st.session_state:
+    st.session_state.prediction_df = None
+    
+if "feature_columns" not in st.session_state:
+    st.session_state.feature_columns = []
+    
+if "forecast_df" not in st.session_state:
+    st.session_state.forecast_df = None
 
 # =====================================================
 # TITLE
@@ -104,6 +121,8 @@ if (wind_file is None or no2_file is None or lst_file is None):
 # =====================================================
 # LOAD DATA
 # =====================================================
+
+merged_df = None
 
 try:
     if use_sample_data:
@@ -881,17 +900,56 @@ with tab4:
             errors='ignore'
         ).select_dtypes(include=np.number)
 
-        # Use dropna with threshold to keep rows with at least 50% data
+        # Remove rows with all NaN and keep rows with at least 50% data
         numeric_df = numeric_df.dropna(thresh=numeric_df.shape[1] * 0.5)
 
         if numeric_df.shape[1] > 0 and numeric_df.shape[0] >= 4:
-            pattern_results = build_pattern_recognition_pipeline(
-                numeric_df,
-                n_clusters=4
+            # Prepare data for clustering
+            scaler = StandardScaler()
+            scaled_data = scaler.fit_transform(numeric_df)
+
+            # Build KMeans model
+            kmeans = KMeans(
+                n_clusters=4,
+                random_state=42,
+                n_init=10
             )
 
-            clustered_df = pattern_results["clustered_data"]
-            cluster_profiles = pattern_results["cluster_profiles"]
+            clusters = kmeans.fit_predict(scaled_data)
+
+            # Create clustered dataframe
+            clustered_df_result = numeric_df.copy()
+            clustered_df_result["Cluster"] = clusters
+
+            # Generate cluster profiles
+            cluster_profiles = (
+                clustered_df_result
+                .groupby("Cluster")
+                .mean(numeric_only=True)
+            )
+
+            # Anomaly detection
+            isolation_model = IsolationForest(
+                contamination=0.05,
+                random_state=42
+            )
+
+            anomaly_flags = isolation_model.fit_predict(scaled_data)
+            anomaly_scores = isolation_model.score_samples(scaled_data)
+
+            anomaly_df = clustered_df_result.copy()
+            anomaly_df["Anomaly"] = anomaly_flags
+            anomaly_df["Anomaly_Score"] = anomaly_scores
+
+            # Store results in session state
+            st.session_state.pattern_results = {
+                "clustered_data": clustered_df_result,
+                "cluster_profiles": cluster_profiles,
+                "anomaly_data": anomaly_df,
+                "kmeans_model": kmeans,
+                "scaler": scaler
+            }
+            st.session_state.clustered_df = clustered_df_result
 
             st.success("Pattern recognition completed.")
             st.dataframe(cluster_profiles, use_container_width=True)
@@ -914,9 +972,9 @@ with tab4:
     st.subheader("📊 Cluster Visualization")
 
     try:
-        if clustered_df is not None and not clustered_df.empty:
+        if st.session_state.clustered_df is not None and not st.session_state.clustered_df.empty:
             numeric_cluster_cols = (
-                clustered_df.select_dtypes(include=np.number).columns.tolist()
+                st.session_state.clustered_df.select_dtypes(include=np.number).columns.tolist()
             )
 
             numeric_cluster_cols = [
@@ -939,7 +997,7 @@ with tab4:
 
                 fig, ax = plt.subplots(figsize=(10, 6))
                 sns.scatterplot(
-                    data=clustered_df,
+                    data=st.session_state.clustered_df,
                     x=x_axis,
                     y=y_axis,
                     hue="Cluster",
@@ -950,6 +1008,8 @@ with tab4:
                 plt.close()
             else:
                 st.warning("Need at least 2 numeric columns for visualization.")
+        else:
+            st.info("Run Pattern Recognition first to visualize clusters.")
 
     except Exception as e:
         st.error(f"Cluster chart failed: {e}")
@@ -963,8 +1023,8 @@ with tab4:
     st.subheader("📈 Cluster Distribution")
 
     try:
-        if clustered_df is not None and not clustered_df.empty:
-            distribution = calculate_cluster_distribution(clustered_df)
+        if st.session_state.clustered_df is not None and not st.session_state.clustered_df.empty:
+            distribution = calculate_cluster_distribution(st.session_state.clustered_df)
 
             if not distribution.empty:
                 fig, ax = plt.subplots(figsize=(8, 5))
@@ -975,6 +1035,8 @@ with tab4:
                 )
                 st.pyplot(fig)
                 plt.close()
+        else:
+            st.info("Run Pattern Recognition first to see cluster distribution.")
 
     except Exception as e:
         st.error(f"Distribution failed: {e}")
@@ -988,8 +1050,8 @@ with tab4:
     st.subheader("🚨 Anomaly Detection")
 
     try:
-        if pattern_results is not None:
-            anomaly_df = pattern_results["anomaly_data"]
+        if st.session_state.pattern_results is not None:
+            anomaly_df = st.session_state.pattern_results["anomaly_data"]
             anomalies = get_top_anomalies(anomaly_df, n=15)
 
             if not anomalies.empty:
@@ -997,6 +1059,8 @@ with tab4:
                 st.dataframe(anomalies, use_container_width=True)
             else:
                 st.info("No anomalies detected.")
+        else:
+            st.info("Run Pattern Recognition first to detect anomalies.")
 
     except Exception as e:
         st.error(f"Anomaly detection failed: {e}")
@@ -1034,28 +1098,29 @@ with tab4:
     st.subheader("📈 Predictive Forecasting")
 
     forecast_target = None
-    forecast_results = None
 
     try:
         if len(pollution_cols) > 0:
             forecast_target = st.selectbox(
                 "Forecast Target",
-                pollution_cols
+                pollution_cols,
+                key="forecast_select"
             )
 
             if st.button("Train Forecasting Model", key="forecast_button"):
                 try:
-                    forecast_results = train_forecasting_model(
-                        merged_df,
-                        forecast_target
-                    )
+                    with st.spinner("Training model..."):
+                        forecast_results = train_forecasting_model(
+                            merged_df,
+                            forecast_target
+                        )
 
-                    model = forecast_results["model"]
-                    metrics = forecast_results["metrics"]
-                    prediction_df = forecast_results["prediction_df"]
-                    feature_columns = forecast_results["feature_columns"]
+                        st.session_state.model = forecast_results["model"]
+                        st.session_state.metrics = forecast_results["metrics"]
+                        st.session_state.prediction_df = forecast_results["prediction_df"]
+                        st.session_state.feature_columns = forecast_results["feature_columns"]
 
-                    st.success("Model trained successfully!")
+                        st.success("Model trained successfully!")
 
                 except Exception as e:
                     st.error(f"Model training failed: {e}")
@@ -1072,17 +1137,17 @@ with tab4:
     # =================================================
 
     try:
-        if forecast_results and metrics:
+        if st.session_state.metrics:
             c1, c2, c3 = st.columns(3)
 
             with c1:
-                st.metric("R²", round(metrics["R2"], 3))
+                st.metric("R²", round(st.session_state.metrics["R2"], 3))
 
             with c2:
-                st.metric("MAE", round(metrics["MAE"], 3))
+                st.metric("MAE", round(st.session_state.metrics["MAE"], 3))
 
             with c3:
-                st.metric("RMSE", round(metrics["RMSE"], 3))
+                st.metric("RMSE", round(st.session_state.metrics["RMSE"], 3))
 
     except Exception as e:
         st.error(f"Metric display failed: {e}")
@@ -1096,13 +1161,18 @@ with tab4:
     st.subheader("📉 Actual vs Predicted")
 
     try:
-        if forecast_results and prediction_df is not None and not prediction_df.empty:
+        if st.session_state.prediction_df is not None and not st.session_state.prediction_df.empty:
             fig, ax = plt.subplots(figsize=(12, 6))
-            ax.plot(prediction_df["Actual"].values, label="Actual")
-            ax.plot(prediction_df["Predicted"].values, label="Predicted")
+            ax.plot(st.session_state.prediction_df["Actual"].values, label="Actual", linewidth=2)
+            ax.plot(st.session_state.prediction_df["Predicted"].values, label="Predicted", linewidth=2)
+            ax.set_xlabel("Sample Index")
+            ax.set_ylabel("Value")
+            ax.set_title("Actual vs Predicted Values")
             ax.legend()
             st.pyplot(fig)
             plt.close()
+        else:
+            st.info("Train the forecasting model first to see predictions.")
 
     except Exception as e:
         st.error(f"Prediction plot failed: {e}")
@@ -1116,8 +1186,8 @@ with tab4:
     st.subheader("⭐ Feature Importance")
 
     try:
-        if forecast_results and model is not None:
-            importance_df = get_feature_importance(model, feature_columns)
+        if st.session_state.model is not None and st.session_state.feature_columns:
+            importance_df = get_feature_importance(st.session_state.model, st.session_state.feature_columns)
 
             if not importance_df.empty:
                 st.dataframe(importance_df, use_container_width=True)
@@ -1129,8 +1199,11 @@ with tab4:
                     y="Feature",
                     ax=ax
                 )
+                ax.set_title("Top 10 Important Features")
                 st.pyplot(fig)
                 plt.close()
+        else:
+            st.info("Train the forecasting model first to see feature importance.")
 
     except Exception as e:
         st.error(f"Importance analysis failed: {e}")
@@ -1144,7 +1217,7 @@ with tab4:
     st.subheader("🔮 Future Forecast")
 
     try:
-        if forecast_results and forecast_target and len(pollution_cols) > 0:
+        if st.session_state.model is not None and forecast_target and len(pollution_cols) > 0:
             forecast_df = forecast_future_values(
                 merged_df,
                 forecast_target,
@@ -1155,11 +1228,15 @@ with tab4:
                 st.dataframe(forecast_df, use_container_width=True)
 
                 fig, ax = plt.subplots(figsize=(12, 6))
-                ax.plot(forecast_df["Date"], forecast_df["Forecast"])
+                ax.plot(forecast_df["Date"], forecast_df["Forecast"], linewidth=2)
                 ax.set_title(f"30 Day Forecast: {forecast_target}")
+                ax.set_xlabel("Date")
+                ax.set_ylabel(f"{forecast_target} (Predicted)")
                 plt.xticks(rotation=45)
                 st.pyplot(fig)
                 plt.close()
+        else:
+            st.info("Train the forecasting model first to generate future forecasts.")
 
     except Exception as e:
         st.error(f"Future forecasting failed: {e}")
