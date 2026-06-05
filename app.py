@@ -161,22 +161,19 @@ if merged_df is None:
 # =====================================================
 # FINAL CLEANING
 # =====================================================
-
 for col in merged_df.columns:
     if col.lower() == "date":
         continue
-    
     if merged_df[col].dtype == "object":
-        merged_df[col] = (
-            merged_df[col]
+        merged_df[col] = (merged_df[col]
             .astype(str)
             .str.replace("micromol/m2", "", regex=False)
             .str.replace("µmol/m2", "", regex=False)
             .str.strip()
         )
-
     merged_df[col] = pd.to_numeric(merged_df[col], errors="coerce")
 
+# Drop any rows where 'date' failed to parse, then fill remaining numeric gaps
 merged_df = merged_df.ffill().bfill()
 
 # =====================================================
