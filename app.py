@@ -165,12 +165,10 @@ if merged_df is None:
 # =====================================================
 
 for col in merged_df.columns:
-
-
-if col.lower() == "date":
+    if col.lower() == "date":
     continue
-
-if merged_df[col].dtype == "object":
+    
+    if merged_df[col].dtype == "object":
 
     merged_df[col] = (
 
@@ -191,19 +189,15 @@ if merged_df[col].dtype == "object":
         )
 
         .str.strip()
-    )
+        )
 
-    merged_df[col] = pd.to_numeric(
+     merged_df[col] = pd.to_numeric(
         merged_df[col],
         errors="coerce"
     )
 
 
-merged_df = (
-merged_df
-.ffill()
-.bfill()
-)
+merged_df = (merged_df.ffill().bfill())
 
 # =====================================================
 
