@@ -1507,33 +1507,43 @@ with tab4:
 
     try:
 
-        pattern_results = (
-            build_pattern_recognition_pipeline(
-                merged_df,
-                n_clusters=4
+        numeric_df = merged_df.select_dtypes(include=np.number)
+
+        if numeric_df.shape[1] > 0:
+
+            pattern_results = (
+                build_pattern_recognition_pipeline(
+                    numeric_df,
+                    n_clusters=4
+                )
             )
-        )
 
-        clustered_df = (
-            pattern_results[
-                "clustered_data"
-            ]
-        )
+            clustered_df = (
+                pattern_results[
+                    "clustered_data"
+                ]
+            )
 
-        cluster_profiles = (
-            pattern_results[
-                "cluster_profiles"
-            ]
-        )
+            cluster_profiles = (
+                pattern_results[
+                    "cluster_profiles"
+                ]
+            )
 
-        st.success(
-            "Pattern recognition completed."
-        )
+            st.success(
+                "Pattern recognition completed."
+            )
 
-        st.dataframe(
-            cluster_profiles,
-            use_container_width=True
-        )
+            st.dataframe(
+                cluster_profiles,
+                use_container_width=True
+            )
+
+        else:
+
+            st.warning(
+                "No numeric features available for clustering."
+            )
 
     except Exception as e:
 
