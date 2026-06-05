@@ -115,92 +115,33 @@ if (wind_file is None or no2_file is None or lst_file is None):
         use_sample_data = True
 
 # =====================================================
-
 # LOAD DATA
-
 # =====================================================
-
 try:
-
-if use_sample_data:
-
-    wind_df, no2_df, lst_df = (
-        generate_sample_datasets()
-    )
-
-    merged_df = merge_datasets(
-        wind_df,
-        no2_df,
-        lst_df
-    )
-
-    st.success(
-        "Sample datasets loaded successfully."
-    )
-
-elif (
-    wind_file is not None
-    and no2_file is not None
-    and lst_file is not None
-):
-
-    wind_df = load_csv(
-        wind_file
-    )
-
-    no2_df = load_csv(
-        no2_file
-    )
-
-    lst_df = load_csv(
-        lst_file
-    )
-
-    validate_wind_dataset(
-        wind_df
-    )
-
-    validate_no2_dataset(
-        no2_df
-    )
-
-    validate_lst_dataset(
-        lst_df
-    )
-
-    wind_df = preprocess_dataframe(
-        wind_df
-    )
-
-    no2_df = preprocess_dataframe(
-        no2_df
-    )
-
-    lst_df = preprocess_dataframe(
-        lst_df
-    )
-
-    merged_df = merge_datasets(
-        wind_df,
-        no2_df,
-        lst_df
-    )
-
-
+    if use_sample_data:
+        wind_df, no2_df, lst_df = generate_sample_datasets()
+        merged_df = merge_datasets(wind_df, no2_df, lst_df)
+        st.success("Sample datasets loaded successfully.")
+    elif (wind_file is not None and no2_file is not None and lst_file is not None):
+        wind_df = load_csv(wind_file)
+        no2_df = load_csv(no2_file)
+        lst_df = load_csv(lst_file)
+        
+        validate_wind_dataset(wind_df)
+        validate_no2_dataset(no2_df)
+        validate_lst_dataset(lst_df)
+        
+        wind_df = preprocess_dataframe(wind_df)
+        no2_df = preprocess_dataframe(no2_df)
+        lst_df = preprocess_dataframe(lst_df)
+        
+        merged_df = merge_datasets(wind_df, no2_df, lst_df)
 except KeyError as e:
-
-st.error(
-    f"Column Error: {e}"
-)
-
-
+    st.error(f"Column Error: {e}")
 except ValueError as e:
-
-
-st.error(
-    f"Data Error: {e}"
-)
-
+    st.error(f"Data Error: {e}")
+except Exception as e:
+    st.error(f"Unexpected Error: {e}")
 
 except Exception as e:
 
