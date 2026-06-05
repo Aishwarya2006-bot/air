@@ -85,7 +85,7 @@ st.markdown(
 """
 Advanced Environmental Intelligence Platform
 
-```
+
 Features:
 
 - Multi-File Data Fusion
@@ -96,7 +96,7 @@ Features:
 - Anomaly Detection
 - Predictive Forecasting
 """
-```
+
 
 )
 
