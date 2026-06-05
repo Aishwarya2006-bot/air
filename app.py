@@ -8,40 +8,40 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from utils.data_loader import (
-load_csv,
-validate_wind_dataset,
-validate_no2_dataset,
-validate_lst_dataset,
-preprocess_dataframe,
-merge_datasets,
-generate_sample_datasets,
-identify_pollution_columns,
-identify_wind_columns,
-identify_temperature_columns,
-get_numeric_columns
+    load_csv,
+    validate_wind_dataset,
+    validate_no2_dataset,
+    validate_lst_dataset,
+    preprocess_dataframe,
+    merge_datasets,
+    generate_sample_datasets,
+    identify_pollution_columns,
+    identify_wind_columns,
+    identify_temperature_columns,
+    get_numeric_columns
 )
 
 from utils.statistics import (
-calculate_correlation_matrix,
-pearson_analysis,
-spearman_analysis,
-weather_pollution_significance,
-lag_correlation_analysis,
-calculate_basic_kpis,
-strongest_correlations
+    calculate_correlation_matrix,
+    pearson_analysis,
+    spearman_analysis,
+    weather_pollution_significance,
+    lag_correlation_analysis,
+    calculate_basic_kpis,
+    strongest_correlations
 )
 
 from utils.clustering import (
-build_pattern_recognition_pipeline,
-calculate_cluster_distribution,
-environmental_event_detector,
-get_top_anomalies
+    build_pattern_recognition_pipeline,
+    calculate_cluster_distribution,
+    environmental_event_detector,
+    get_top_anomalies
 )
 
 from utils.forecasting import (
-train_forecasting_model,
-forecast_future_values,
-get_feature_importance
+    train_forecasting_model,
+    forecast_future_values,
+    get_feature_importance
 )
 
 # =====================================================
@@ -51,9 +51,9 @@ get_feature_importance
 # =====================================================
 
 st.set_page_config(
-page_title="Urban Air Quality Correlation Engine",
-page_icon="🌍",
-layout="wide"
+    page_title="Urban Air Quality Correlation Engine",
+    page_icon="🌍",
+    layout="wide"
 )
 
 # =====================================================
@@ -78,11 +78,11 @@ metrics = None
 # =====================================================
 
 st.title(
-"🌍 Urban Air Quality Correlation Engine"
+    "🌍 Urban Air Quality Correlation Engine"
 )
 
 st.markdown(
-"""
+    """
 Advanced Environmental Intelligence Platform
 
 
@@ -96,8 +96,6 @@ Features:
 - Anomaly Detection
 - Predictive Forecasting
 """
-
-
 )
 
 # =====================================================
@@ -142,9 +140,6 @@ except ValueError as e:
     st.error(f"Data Error: {e}")
 except Exception as e:
     st.error(f"Unexpected Error: {e}")
-except Exception as e:
-
-    st.error(f"Unexpected Error: {e}")
 
 
 # =====================================================
@@ -166,32 +161,32 @@ if merged_df is None:
 
 for col in merged_df.columns:
     if col.lower() == "date":
-    continue
+        continue
     
     if merged_df[col].dtype == "object":
 
-    merged_df[col] = (
+        merged_df[col] = (
 
-        merged_df[col]
+            merged_df[col]
 
-        .astype(str)
+            .astype(str)
 
-        .str.replace(
-            "micromol/m2",
-            "",
-            regex=False
+            .str.replace(
+                "micromol/m2",
+                "",
+                regex=False
+            )
+
+            .str.replace(
+                "µmol/m2",
+                "",
+                regex=False
+            )
+
+            .str.strip()
         )
 
-        .str.replace(
-            "µmol/m2",
-            "",
-            regex=False
-        )
-
-        .str.strip()
-        )
-
-     merged_df[col] = pd.to_numeric(
+    merged_df[col] = pd.to_numeric(
         merged_df[col],
         errors="coerce"
     )
@@ -206,27 +201,27 @@ merged_df = (merged_df.ffill().bfill())
 # =====================================================
 
 pollution_cols = (
-identify_pollution_columns(
-merged_df
-)
+    identify_pollution_columns(
+        merged_df
+    )
 )
 
 wind_cols = (
-identify_wind_columns(
-merged_df
-)
+    identify_wind_columns(
+        merged_df
+    )
 )
 
 temperature_cols = (
-identify_temperature_columns(
-merged_df
-)
+    identify_temperature_columns(
+        merged_df
+    )
 )
 
 numeric_cols = (
-get_numeric_columns(
-merged_df
-)
+    get_numeric_columns(
+        merged_df
+    )
 )
 
 # =====================================================
@@ -236,22 +231,14 @@ merged_df
 # =====================================================
 
 tab1, tab2, tab3, tab4 = st.tabs(
-
-
-[
-
-    "📊 Data Fusion & KPIs",
-
-    "📈 Correlation Analytics",
-
-    "📉 Lag & Significance",
-
-    "🤖 Pattern & Prediction"
-
-]
-
-
+    [
+        "📊 Data Fusion & KPIs",
+        "📈 Correlation Analytics",
+        "📉 Lag & Significance",
+        "🤖 Pattern & Prediction"
+    ]
 )
+
 # =====================================================
 
 # TAB 1 : DATA FUSION & KPI DASHBOARD
@@ -260,391 +247,390 @@ tab1, tab2, tab3, tab4 = st.tabs(
 
 with tab1:
 
-
-st.header(
-    "📊 Data Fusion & KPI Dashboard"
-)
-
-st.success(
-    f"Successfully merged {len(merged_df):,} records."
-)
-
-# =================================================
-# DATA PREVIEW
-# =================================================
-
-st.subheader(
-    "Merged Dataset Preview"
-)
-
-st.dataframe(
-    merged_df.head(20),
-    use_container_width=True
-)
-
-st.markdown("---")
-
-# =================================================
-# KPI SECTION
-# =================================================
-
-st.subheader(
-    "📌 Key Performance Indicators"
-)
-
-try:
-
-    kpis = (
-        calculate_basic_kpis(
-            merged_df
-        )
+    st.header(
+        "📊 Data Fusion & KPI Dashboard"
     )
 
-    available_metrics = list(
-        kpis.keys()
+    st.success(
+        f"Successfully merged {len(merged_df):,} records."
     )
 
-    if len(available_metrics) >= 4:
+    # =================================================
+    # DATA PREVIEW
+    # =================================================
 
-        c1, c2, c3, c4 = (
-            st.columns(4)
-        )
-
-        with c1:
-
-            st.metric(
-                available_metrics[0],
-                round(
-                    kpis[
-                        available_metrics[0]
-                    ]["mean"],
-                    2
-                )
-            )
-
-        with c2:
-
-            st.metric(
-                available_metrics[1],
-                round(
-                    kpis[
-                        available_metrics[1]
-                    ]["mean"],
-                    2
-                )
-            )
-
-        with c3:
-
-            st.metric(
-                available_metrics[2],
-                round(
-                    kpis[
-                        available_metrics[2]
-                    ]["mean"],
-                    2
-                )
-            )
-
-        with c4:
-
-            st.metric(
-                available_metrics[3],
-                round(
-                    kpis[
-                        available_metrics[3]
-                    ]["mean"],
-                    2
-                )
-            )
-
-except Exception as e:
-
-    st.error(
-        f"KPI generation failed: {e}"
+    st.subheader(
+        "Merged Dataset Preview"
     )
-
-st.markdown("---")
-
-# =================================================
-# DATASET INFO
-# =================================================
-
-st.subheader(
-    "📋 Dataset Information"
-)
-
-i1, i2, i3 = st.columns(3)
-
-with i1:
-
-    st.metric(
-        "Rows",
-        merged_df.shape[0]
-    )
-
-with i2:
-
-    st.metric(
-        "Columns",
-        merged_df.shape[1]
-    )
-
-with i3:
-
-    st.metric(
-        "Numeric Variables",
-        len(numeric_cols)
-    )
-
-st.markdown("---")
-
-# =================================================
-# MISSING VALUES
-# =================================================
-
-st.subheader(
-    "🔍 Missing Values Audit"
-)
-
-missing_df = pd.DataFrame({
-
-    "Column":
-        merged_df.columns,
-
-    "Missing Values":
-        merged_df.isna().sum(),
-
-    "Missing %":
-        (
-            merged_df
-            .isna()
-            .mean()
-            * 100
-        ).round(2)
-
-})
-
-st.dataframe(
-    missing_df,
-    use_container_width=True
-)
-
-st.markdown("---")
-
-# =================================================
-# TEMPORAL COVERAGE
-# =================================================
-
-st.subheader(
-    "📅 Temporal Coverage"
-)
-
-if "date" in merged_df.columns:
-
-    d1, d2 = st.columns(2)
-
-    with d1:
-
-        st.metric(
-            "Start Date",
-            str(
-                merged_df[
-                    "date"
-                ]
-                .min()
-                .date()
-            )
-        )
-
-    with d2:
-
-        st.metric(
-            "End Date",
-            str(
-                merged_df[
-                    "date"
-                ]
-                .max()
-                .date()
-            )
-        )
-
-st.markdown("---")
-
-# =================================================
-# DESCRIPTIVE STATISTICS
-# =================================================
-
-st.subheader(
-    "📈 Descriptive Statistics"
-)
-
-try:
 
     st.dataframe(
-
-        merged_df
-        .describe(
-            include="all"
-        )
-        .transpose(),
-
+        merged_df.head(20),
         use_container_width=True
     )
 
-except Exception as e:
+    st.markdown("---")
 
-    st.error(
-        f"Statistics failed: {e}"
+    # =================================================
+    # KPI SECTION
+    # =================================================
+
+    st.subheader(
+        "📌 Key Performance Indicators"
     )
 
-st.markdown("---")
+    try:
 
-# =================================================
-# FEATURE DISTRIBUTION
-# =================================================
+        kpis = (
+            calculate_basic_kpis(
+                merged_df
+            )
+        )
 
-st.subheader(
-    "📊 Feature Distribution Explorer"
-)
+        available_metrics = list(
+            kpis.keys()
+        )
 
-selected_feature = st.selectbox(
+        if len(available_metrics) >= 4:
 
-    "Select Variable",
+            c1, c2, c3, c4 = (
+                st.columns(4)
+            )
 
-    numeric_cols,
+            with c1:
 
-    key="distribution_feature"
+                st.metric(
+                    available_metrics[0],
+                    round(
+                        kpis[
+                            available_metrics[0]
+                        ]["mean"],
+                        2
+                    )
+                )
 
-)
+            with c2:
 
-try:
+                st.metric(
+                    available_metrics[1],
+                    round(
+                        kpis[
+                            available_metrics[1]
+                        ]["mean"],
+                        2
+                    )
+                )
 
-    fig, ax = plt.subplots(
-        figsize=(10, 5)
+            with c3:
+
+                st.metric(
+                    available_metrics[2],
+                    round(
+                        kpis[
+                            available_metrics[2]
+                        ]["mean"],
+                        2
+                    )
+                )
+
+            with c4:
+
+                st.metric(
+                    available_metrics[3],
+                    round(
+                        kpis[
+                            available_metrics[3]
+                        ]["mean"],
+                        2
+                    )
+                )
+
+    except Exception as e:
+
+        st.error(
+            f"KPI generation failed: {e}"
+        )
+
+    st.markdown("---")
+
+    # =================================================
+    # DATASET INFO
+    # =================================================
+
+    st.subheader(
+        "📋 Dataset Information"
     )
 
-    sns.histplot(
+    i1, i2, i3 = st.columns(3)
 
-        merged_df[
-            selected_feature
-        ],
+    with i1:
 
-        kde=True,
+        st.metric(
+            "Rows",
+            merged_df.shape[0]
+        )
 
-        ax=ax
+    with i2:
+
+        st.metric(
+            "Columns",
+            merged_df.shape[1]
+        )
+
+    with i3:
+
+        st.metric(
+            "Numeric Variables",
+            len(numeric_cols)
+        )
+
+    st.markdown("---")
+
+    # =================================================
+    # MISSING VALUES
+    # =================================================
+
+    st.subheader(
+        "🔍 Missing Values Audit"
+    )
+
+    missing_df = pd.DataFrame({
+
+        "Column":
+            merged_df.columns,
+
+        "Missing Values":
+            merged_df.isna().sum(),
+
+        "Missing %":
+            (
+                merged_df
+                .isna()
+                .mean()
+                * 100
+            ).round(2)
+
+    })
+
+    st.dataframe(
+        missing_df,
+        use_container_width=True
+    )
+
+    st.markdown("---")
+
+    # =================================================
+    # TEMPORAL COVERAGE
+    # =================================================
+
+    st.subheader(
+        "📅 Temporal Coverage"
+    )
+
+    if "date" in merged_df.columns:
+
+        d1, d2 = st.columns(2)
+
+        with d1:
+
+            st.metric(
+                "Start Date",
+                str(
+                    merged_df[
+                        "date"
+                    ]
+                    .min()
+                    .date()
+                )
+            )
+
+        with d2:
+
+            st.metric(
+                "End Date",
+                str(
+                    merged_df[
+                        "date"
+                    ]
+                    .max()
+                    .date()
+                )
+            )
+
+    st.markdown("---")
+
+    # =================================================
+    # DESCRIPTIVE STATISTICS
+    # =================================================
+
+    st.subheader(
+        "📈 Descriptive Statistics"
+    )
+
+    try:
+
+        st.dataframe(
+
+            merged_df
+            .describe(
+                include="all"
+            )
+            .transpose(),
+
+            use_container_width=True
+        )
+
+    except Exception as e:
+
+        st.error(
+            f"Statistics failed: {e}"
+        )
+
+    st.markdown("---")
+
+    # =================================================
+    # FEATURE DISTRIBUTION
+    # =================================================
+
+    st.subheader(
+        "📊 Feature Distribution Explorer"
+    )
+
+    selected_feature = st.selectbox(
+
+        "Select Variable",
+
+        numeric_cols,
+
+        key="distribution_feature"
 
     )
 
-    ax.set_title(
-        f"Distribution of {selected_feature}"
+    try:
+
+        fig, ax = plt.subplots(
+            figsize=(10, 5)
+        )
+
+        sns.histplot(
+
+            merged_df[
+                selected_feature
+            ],
+
+            kde=True,
+
+            ax=ax
+
+        )
+
+        ax.set_title(
+            f"Distribution of {selected_feature}"
+        )
+
+        st.pyplot(fig)
+
+    except Exception as e:
+
+        st.error(
+            f"Distribution plot failed: {e}"
+        )
+
+    st.markdown("---")
+
+    # =================================================
+    # TIME SERIES EXPLORER
+    # =================================================
+
+    st.subheader(
+        "📈 Time Series Explorer"
     )
 
-    st.pyplot(fig)
+    ts_variable = st.selectbox(
 
-except Exception as e:
+        "Choose Variable",
 
-    st.error(
-        f"Distribution plot failed: {e}"
+        numeric_cols,
+
+        key="time_series"
+
     )
 
-st.markdown("---")
+    try:
 
-# =================================================
-# TIME SERIES EXPLORER
-# =================================================
+        fig, ax = plt.subplots(
+            figsize=(12, 5)
+        )
 
-st.subheader(
-    "📈 Time Series Explorer"
-)
+        ax.plot(
 
-ts_variable = st.selectbox(
+            merged_df["date"],
 
-    "Choose Variable",
+            merged_df[
+                ts_variable
+            ]
 
-    numeric_cols,
+        )
 
-    key="time_series"
+        ax.set_title(
+            f"{ts_variable} Over Time"
+        )
 
-)
+        ax.set_xlabel(
+            "Date"
+        )
 
-try:
-
-    fig, ax = plt.subplots(
-        figsize=(12, 5)
-    )
-
-    ax.plot(
-
-        merged_df["date"],
-
-        merged_df[
+        ax.set_ylabel(
             ts_variable
-        ]
+        )
 
+        plt.xticks(
+            rotation=45
+        )
+
+        st.pyplot(fig)
+
+    except Exception as e:
+
+        st.error(
+            f"Time series plot failed: {e}"
+        )
+
+    st.markdown("---")
+
+    # =================================================
+    # STRONGEST CORRELATIONS
+    # =================================================
+
+    st.subheader(
+        "🔥 Strongest Correlations"
     )
 
-    ax.set_title(
-        f"{ts_variable} Over Time"
-    )
+    try:
 
-    ax.set_xlabel(
-        "Date"
-    )
+        strongest_corr_df = (
 
-    ax.set_ylabel(
-        ts_variable
-    )
+            strongest_correlations(
 
-    plt.xticks(
-        rotation=45
-    )
+                merged_df,
 
-    st.pyplot(fig)
+                top_n=20
 
-except Exception as e:
+            )
+        )
 
-    st.error(
-        f"Time series plot failed: {e}"
-    )
+        st.dataframe(
 
-st.markdown("---")
+            strongest_corr_df,
 
-# =================================================
-# STRONGEST CORRELATIONS
-# =================================================
-
-st.subheader(
-    "🔥 Strongest Correlations"
-)
-
-try:
-
-    strongest_corr_df = (
-
-        strongest_correlations(
-
-            merged_df,
-
-            top_n=20
+            use_container_width=True
 
         )
-    )
 
-    st.dataframe(
+    except Exception as e:
 
-        strongest_corr_df,
-
-        use_container_width=True
-
-    )
-
-except Exception as e:
-
-    st.error(
-        f"Correlation extraction failed: {e}"
-    )
+        st.error(
+            f"Correlation extraction failed: {e}"
+        )
 
 # =====================================================
 # TAB 2 : CORRELATION ANALYTICS
@@ -1092,6 +1078,7 @@ Statistical Result:
         st.error(
             f"Pollution analysis failed: {e}"
         )
+
 # =====================================================
 # TAB 3 : LAG ANALYSIS & SIGNIFICANCE TESTING
 # =====================================================
@@ -1477,6 +1464,7 @@ Result:
         st.error(
             f"Interpretation failed: {e}"
         )
+
 # =====================================================
 # TAB 4 : PATTERN RECOGNITION & PREDICTION
 # =====================================================
