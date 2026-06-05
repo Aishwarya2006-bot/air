@@ -142,12 +142,9 @@ except ValueError as e:
     st.error(f"Data Error: {e}")
 except Exception as e:
     st.error(f"Unexpected Error: {e}")
-
 except Exception as e:
 
-st.error(
-    f"Unexpected Error: {e}"
-)
+    st.error(f"Unexpected Error: {e}")
 
 
 # =====================================================
