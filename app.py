@@ -1059,63 +1059,58 @@ except Exception as e:
     st.error(f"Event detection failed: {e}")
 
 st.markdown("---")
+st.markdown("---")
 
-# ================================================= #
-# FORECASTING
-# ================================================= #
-st.subheader("📈 Predictive Forecasting")
-forecast_target = None
-try:
-    if len(pollution_cols) > 0:
-        forecast_target = st.selectbox("Forecast Target", pollution_cols, key="forecast_select")
-        if st.button("Train Forecasting Model", key="forecast_button"):
-            try:
-                with st.spinner("Training model..."):
-                    forecast_results = train_forecasting_model(merged_df, forecast_target)
-                    st.session_state.model = forecast_results["model"]
-                    st.session_state.metrics = forecast_results["metrics"]
-                    st.session_state.prediction_df = forecast_results["prediction_df"]
-                    st.session_state.feature_columns = forecast_results["feature_columns"]
-                    st.success("Model trained successfully!")
-            except Exception as e:
-                st.error(f"Model training failed: {e}")
-    else:
-        st.warning("No pollution columns available for forecasting.")
-except Exception as e:
-    st.error(f"Forecasting setup failed: {e}")
+    # ================================================= #
+    # FORECASTING
+    # ================================================= #
+    st.subheader("📈 Predictive Forecasting")
+    forecast_target = None
+    try:
+        if len(pollution_cols) > 0:
+            forecast_target = st.selectbox("Forecast Target", pollution_cols, key="forecast_select")
+            if st.button("Train Forecasting Model", key="forecast_button"):
+                try:
+                    with st.spinner("Training model..."):
+                        # Uses the safe tab4_clean_df to prevent NaN crashes
+                        forecast_results = train_forecasting_model(tab4_clean_df, forecast_target)
+                        st.session_state.model = forecast_results["model"]
+                        st.session_state.metrics = forecast_results["metrics"]
+                        st.session_state.prediction_df = forecast_results["prediction_df"]
+                        st.session_state.feature_columns = forecast_results["feature_columns"]
+                        st.success("Model trained successfully!")
+                except Exception as e:
+                    st.error(f"Model training failed: {e}")
+        else:
+            st.warning("No pollution columns available for forecasting.")
+    except Exception as e:
+        st.error(f"Forecasting setup failed: {e}")
 
     st.markdown("---")
 
-    # =================================================
+    # ================================================= #
     # MODEL METRICS
-    # =================================================
-
+    # ================================================= #
     try:
-        if st.session_state.metrics:
+        if "metrics" in st.session_state and st.session_state.metrics:
             c1, c2, c3 = st.columns(3)
-
             with c1:
                 st.metric("R²", round(st.session_state.metrics["R2"], 3))
-
             with c2:
                 st.metric("MAE", round(st.session_state.metrics["MAE"], 3))
-
             with c3:
                 st.metric("RMSE", round(st.session_state.metrics["RMSE"], 3))
-
     except Exception as e:
         st.error(f"Metric display failed: {e}")
 
     st.markdown("---")
 
-    # =================================================
+    # ================================================= #
     # ACTUAL VS PREDICTED
-    # =================================================
-
+    # ================================================= #
     st.subheader("📉 Actual vs Predicted")
-
     try:
-        if st.session_state.prediction_df is not None and not st.session_state.prediction_df.empty:
+        if "prediction_df" in st.session_state and st.session_state.prediction_df is not None and not st.session_state.prediction_df.empty:
             fig, ax = plt.subplots(figsize=(12, 6))
             ax.plot(st.session_state.prediction_df["Actual"].values, label="Actual", linewidth=2)
             ax.plot(st.session_state.prediction_df["Predicted"].values, label="Predicted", linewidth=2)
@@ -1127,72 +1122,64 @@ except Exception as e:
             plt.close()
         else:
             st.info("Train the forecasting model first to see predictions.")
-
     except Exception as e:
         st.error(f"Prediction plot failed: {e}")
 
     st.markdown("---")
 
-    # =================================================
+    # ================================================= #
     # FEATURE IMPORTANCE
-    # =================================================
-
+    # ================================================= #
     st.subheader("⭐ Feature Importance")
-
     try:
-        if st.session_state.model is not None and st.session_state.feature_columns:
+        if "model" in st.session_state and st.session_state.model is not None and st.session_state.feature_columns:
             importance_df = get_feature_importance(st.session_state.model, st.session_state.feature_columns)
-
             if not importance_df.empty:
                 st.dataframe(importance_df, use_container_width=True)
-
                 fig, ax = plt.subplots(figsize=(10, 6))
-                sns.barplot(
-                    data=importance_df.head(10),
-                    x="Importance",
-                    y="Feature",
-                    ax=ax
-                )
+                sns.barplot(data=importance_df.head(10), x="Importance", y="Feature", ax=ax)
                 ax.set_title("Top 10 Important Features")
                 st.pyplot(fig)
                 plt.close()
+            else:
+                st.info("Train the forecasting model first to see feature importance.")
         else:
             st.info("Train the forecasting model first to see feature importance.")
-
     except Exception as e:
         st.error(f"Importance analysis failed: {e}")
 
     st.markdown("---")
-# ================================================= #
-# FUTURE FORECAST
-# ================================================= #
-        st.subheader("🔮 Future Forecast")
-        try:
-            if forecast_target is not None and "model" in st.session_state:
-                with st.spinner("Generating 30-day forecast..."):
-                    forecast_df = forecast_future_values(tab4_clean_df, forecast_target, periods=30)
-                    
-                if not forecast_df.empty:
-                    st.dataframe(forecast_df, use_container_width=True)
-                    
-                    fig, ax = plt.subplots(figsize=(12, 6))
-                    ax.plot(forecast_df["Date"], forecast_df["Forecast"], linewidth=2)
-                    ax.set_title(f"30 Day Forecast: {forecast_target}")
-                    ax.set_xlabel("Date")
-                    ax.set_ylabel(f"{forecast_target} (Predicted)")
-                    plt.xticks(rotation=45)
-                    st.pyplot(fig)
-                    plt.close()
-                else:
-                    st.info("Train the forecasting model first to generate future forecasts.")
+
+    # ================================================= #
+    # FUTURE FORECAST
+    # ================================================= #
+    st.subheader("🔮 Future Forecast")
+    try:
+        if forecast_target is not None and "model" in st.session_state and st.session_state.model is not None:
+            with st.spinner("Generating 30-day forecast..."):
+                forecast_df = forecast_future_values(tab4_clean_df, forecast_target, periods=30)
+                
+            if not forecast_df.empty:
+                st.dataframe(forecast_df, use_container_width=True)
+                fig, ax = plt.subplots(figsize=(12, 6))
+                ax.plot(forecast_df["Date"], forecast_df["Forecast"], linewidth=2)
+                ax.set_title(f"30 Day Forecast: {forecast_target}")
+                ax.set_xlabel("Date")
+                ax.set_ylabel(f"{forecast_target} (Predicted)")
+                plt.xticks(rotation=45)
+                st.pyplot(fig)
+                plt.close()
             else:
                 st.info("Train the forecasting model first to generate future forecasts.")
-        except Exception as e:
-            st.error(f"Future forecasting failed: {e}")
+        else:
+            st.info("Train the forecasting model first to generate future forecasts.")
+    except Exception as e:
+        st.error(f"Future forecasting failed: {e}")
 
-        st.markdown("---")
+st.markdown("---")
+
 # =====================================================
-# DOWNLOAD DATA
+# DOWNLOAD DATA (Sits outside of the tabs block)
 # =====================================================
 st.subheader("⬇ Download Results")
 try:
