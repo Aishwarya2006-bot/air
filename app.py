@@ -1163,61 +1163,54 @@ except Exception as e:
         st.error(f"Importance analysis failed: {e}")
 
     st.markdown("---")
+# ================================================= #
+        # FUTURE FORECAST
+        # ================================================= #
+        st.subheader("🔮 Future Forecast")
+        try:
+            if forecast_target is not None and "model" in st.session_state:
+                with st.spinner("Generating 30-day forecast..."):
+                    # 🔥 FIXED: Changed from merged_df to tab4_clean_df to prevent NaN errors
+                    forecast_df = forecast_future_values(tab4_clean_df, forecast_target, periods=30)
+                    
+                if not forecast_df.empty:
+                    st.dataframe(forecast_df, use_container_width=True)
+                    
+                    fig, ax = plt.subplots(figsize=(12, 6))
+                    ax.plot(forecast_df["Date"], forecast_df["Forecast"], linewidth=2)
+                    ax.set_title(f"30 Day Forecast: {forecast_target}")
+                    ax.set_xlabel("Date")
+                    ax.set_ylabel(f"{forecast_target} (Predicted)")
+                    plt.xticks(rotation=45)
+                    st.pyplot(fig)
+                    plt.close()
+                else:
+                    st.info("Train the forecasting model first to generate future forecasts.")
+            else:
+                st.info("Train the forecasting model first to generate future forecasts.")
+        except Exception as e:
+            st.error(f"Future forecasting failed: {e}")
 
-    # =================================================
-    # FUTURE FORECAST
-    # =================================================
+st.markdown("---")
 
-    st.subheader("🔮 Future Forecast")
+# =====================================================
+# DOWNLOAD DATA
+# =====================================================
+st.subheader("⬇ Download Results")
+try:
+    csv = merged_df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="Download Merged Dataset",
+        data=csv,
+        file_name="urban_environmental_data.csv",
+        mime="text/csv"
+    )
+except Exception as e:
+    st.error(f"Download failed: {e}")
 
-    try:
-        if st.session_state.model is not None and forecast_target and len(pollution_cols) > 0:
-            forecast_df = forecast_future_values(
-                merged_df,
-                forecast_target,
-                periods=30
-            )
-
-            if not forecast_df.empty:
-                st.dataframe(forecast_df, use_container_width=True)
-
-                fig, ax = plt.subplots(figsize=(12, 6))
-                ax.plot(forecast_df["Date"], forecast_df["Forecast"], linewidth=2)
-                ax.set_title(f"30 Day Forecast: {forecast_target}")
-                ax.set_xlabel("Date")
-                ax.set_ylabel(f"{forecast_target} (Predicted)")
-                plt.xticks(rotation=45)
-                st.pyplot(fig)
-                plt.close()
-        else:
-            st.info("Train the forecasting model first to generate future forecasts.")
-
-    except Exception as e:
-        st.error(f"Future forecasting failed: {e}")
-
-    st.markdown("---")
-
-    # =================================================
-    # DOWNLOAD DATA
-    # =================================================
-
-    st.subheader("⬇ Download Results")
-
-    try:
-        csv = merged_df.to_csv(index=False).encode("utf-8")
-
-        st.download_button(
-            label="Download Merged Dataset",
-            data=csv,
-            file_name="urban_environmental_data.csv",
-            mime="text/csv"
-        )
-
-    except Exception as e:
-        st.error(f"Download failed: {e}")
-
-    st.markdown("---")
+st.markdown("---")
 
 # =====================================================
 # END OF APPLICATION
 # =====================================================
+
