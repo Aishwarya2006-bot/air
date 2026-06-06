@@ -1070,7 +1070,6 @@ st.markdown("---")
             if st.button("Train Forecasting Model", key="forecast_button"):
                 try:
                     with st.spinner("Training model..."):
-                        # Uses the safe tab4_clean_df to prevent NaN crashes
                         forecast_results = train_forecasting_model(tab4_clean_df, forecast_target)
                         st.session_state.model = forecast_results["model"]
                         st.session_state.metrics = forecast_results["metrics"]
@@ -1192,3 +1191,4 @@ except Exception as e:
     st.error(f"Download failed: {e}")
 
 st.markdown("---")
+
