@@ -1164,13 +1164,12 @@ except Exception as e:
 
     st.markdown("---")
 # ================================================= #
-        # FUTURE FORECAST
-        # ================================================= #
+# FUTURE FORECAST
+# ================================================= #
         st.subheader("🔮 Future Forecast")
         try:
             if forecast_target is not None and "model" in st.session_state:
                 with st.spinner("Generating 30-day forecast..."):
-                    # 🔥 FIXED: Changed from merged_df to tab4_clean_df to prevent NaN errors
                     forecast_df = forecast_future_values(tab4_clean_df, forecast_target, periods=30)
                     
                 if not forecast_df.empty:
@@ -1191,8 +1190,7 @@ except Exception as e:
         except Exception as e:
             st.error(f"Future forecasting failed: {e}")
 
-st.markdown("---")
-
+        st.markdown("---")
 # =====================================================
 # DOWNLOAD DATA
 # =====================================================
