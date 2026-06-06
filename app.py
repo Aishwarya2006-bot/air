@@ -1057,8 +1057,6 @@ try:
         st.warning("No numeric data available for event detection.")
 except Exception as e:
     st.error(f"Event detection failed: {e}")
-
-st.markdown("---")
 st.markdown("---")
 
     # ================================================= #
@@ -1194,8 +1192,3 @@ except Exception as e:
     st.error(f"Download failed: {e}")
 
 st.markdown("---")
-
-# =====================================================
-# END OF APPLICATION
-# =====================================================
-
