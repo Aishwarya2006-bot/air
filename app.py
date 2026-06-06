@@ -1060,44 +1060,31 @@ except Exception as e:
 
 st.markdown("---")
 
-    # =================================================
-    # FORECASTING
-    # =================================================
+   st.markdown("---")
 
-    st.subheader("📈 Predictive Forecasting")
-
-    forecast_target = None
-
-    try:
-        if len(pollution_cols) > 0:
-            forecast_target = st.selectbox(
-                "Forecast Target",
-                pollution_cols,
-                key="forecast_select"
-            )
-
-            if st.button("Train Forecasting Model", key="forecast_button"):
-                try:
-                    with st.spinner("Training model..."):
-                        forecast_results = train_forecasting_model(
-                            merged_df,
-                            forecast_target
-                        )
-
-                        st.session_state.model = forecast_results["model"]
-                        st.session_state.metrics = forecast_results["metrics"]
-                        st.session_state.prediction_df = forecast_results["prediction_df"]
-                        st.session_state.feature_columns = forecast_results["feature_columns"]
-
-                        st.success("Model trained successfully!")
-
-                except Exception as e:
-                    st.error(f"Model training failed: {e}")
-        else:
-            st.warning("No pollution columns available for forecasting.")
-
-    except Exception as e:
-        st.error(f"Forecasting setup failed: {e}")
+# ================================================= #
+# FORECASTING
+# ================================================= #
+st.subheader("📈 Predictive Forecasting")
+forecast_target = None
+try:
+    if len(pollution_cols) > 0:
+        forecast_target = st.selectbox("Forecast Target", pollution_cols, key="forecast_select")
+        if st.button("Train Forecasting Model", key="forecast_button"):
+            try:
+                with st.spinner("Training model..."):
+                    forecast_results = train_forecasting_model(merged_df, forecast_target)
+                    st.session_state.model = forecast_results["model"]
+                    st.session_state.metrics = forecast_results["metrics"]
+                    st.session_state.prediction_df = forecast_results["prediction_df"]
+                    st.session_state.feature_columns = forecast_results["feature_columns"]
+                    st.success("Model trained successfully!")
+            except Exception as e:
+                st.error(f"Model training failed: {e}")
+    else:
+        st.warning("No pollution columns available for forecasting.")
+except Exception as e:
+    st.error(f"Forecasting setup failed: {e}")
 
     st.markdown("---")
 
