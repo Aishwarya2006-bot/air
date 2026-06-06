@@ -1041,26 +1041,24 @@ with tab4:
 
     st.markdown("---")
 
-   # ================================================= #
+# ================================================= #
 # ENVIRONMENTAL EVENTS
 # ================================================= #
 st.subheader("🌍 Environmental Event Detection")
 try:
-    # Changed from merged_df to tab4_clean_df to prevent background NaN crashes
     numeric_events_df = tab4_clean_df.select_dtypes(include=np.number) 
     if not numeric_events_df.empty:
         events = environmental_event_detector(numeric_events_df)
-            if not events.empty:
-                st.dataframe(events.head(20), use_container_width=True)
-            else:
-                st.info("No major environmental events detected.")
+        if not events.empty:
+            st.dataframe(events.head(20), use_container_width=True)
         else:
-            st.warning("No numeric data available for event detection.")
+            st.info("No major environmental events detected.")
+    else:
+        st.warning("No numeric data available for event detection.")
+except Exception as e:
+    st.error(f"Event detection failed: {e}")
 
-    except Exception as e:
-        st.error(f"Event detection failed: {e}")
-
-    st.markdown("---")
+st.markdown("---")
 
     # =================================================
     # FORECASTING
