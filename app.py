@@ -878,15 +878,27 @@ with tab4:
     • Future Predictions
     """)
     st.markdown("---")
-
     # =================================================
     # 🔥 MASTER CLEANING LAYER FOR TAB 4
     # =================================================
     # Create a completely safe, imputed dataframe for all Tab 4 ML modules
     tab4_clean_df = merged_df.copy()
+
+    # 1. Replace any infinite values with NaN so they can be caught
+    tab4_clean_df = tab4_clean_df.replace([np.inf, -np.inf], np.nan)
+
     for col in tab4_clean_df.columns:
         if col.lower() != "date" and pd.api.types.is_numeric_dtype(tab4_clean_df[col]):
-            tab4_clean_df[col] = tab4_clean_df[col].fillna(tab4_clean_df[col].mean())
+            # 2. If a column is 100% completely empty, mean() fails. Force it to 0.
+            if tab4_clean_df[col].isna().all():
+                tab4_clean_df[col] = tab4_clean_df[col].fillna(0)
+            else:
+                # 3. Otherwise, fill normal gaps with the column average
+                tab4_clean_df[col] = tab4_clean_df[col].fillna(tab4_clean_df[col].mean())
+                
+            # 4. Absolute final safety net: any remaining stray NaNs become 0
+            tab4_clean_df[col] = tab4_clean_df[col].fillna(0)
+
 
     # =================================================
     # KMEANS PATTERN RECOGNITION
@@ -1040,7 +1052,7 @@ with tab4:
         st.error(f"Anomaly detection failed: {e}")
 
     st.markdown("---")
-# ================================================= #
+    # ================================================= #
     # ENVIRONMENTAL EVENTS
     # ================================================= #
     st.subheader("🌍 Environmental Event Detection")
