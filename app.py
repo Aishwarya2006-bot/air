@@ -1040,24 +1040,24 @@ with tab4:
         st.error(f"Anomaly detection failed: {e}")
 
     st.markdown("---")
-
 # ================================================= #
-# ENVIRONMENTAL EVENTS
-# ================================================= #
-st.subheader("🌍 Environmental Event Detection")
-try:
-    numeric_events_df = tab4_clean_df.select_dtypes(include=np.number) 
-    if not numeric_events_df.empty:
-        events = environmental_event_detector(numeric_events_df)
-        if not events.empty:
-            st.dataframe(events.head(20), use_container_width=True)
+    # ENVIRONMENTAL EVENTS
+    # ================================================= #
+    st.subheader("🌍 Environmental Event Detection")
+    try:
+        numeric_events_df = tab4_clean_df.select_dtypes(include=np.number) 
+        if not numeric_events_df.empty:
+            events = environmental_event_detector(numeric_events_df)
+            if not events.empty:
+                st.dataframe(events.head(20), use_container_width=True)
+            else:
+                st.info("No major environmental events detected.")
         else:
-            st.info("No major environmental events detected.")
-    else:
-        st.warning("No numeric data available for event detection.")
-except Exception as e:
-    st.error(f"Event detection failed: {e}")
-st.markdown("---")
+            st.warning("No numeric data available for event detection.")
+    except Exception as e:
+        st.error(f"Event detection failed: {e}")
+
+    st.markdown("---")
 
     # ================================================= #
     # FORECASTING
@@ -1176,7 +1176,7 @@ st.markdown("---")
 st.markdown("---")
 
 # =====================================================
-# DOWNLOAD DATA (Sits outside of the tabs block)
+# DOWNLOAD DATA (Sits completely outside of the tabs block)
 # =====================================================
 st.subheader("⬇ Download Results")
 try:
@@ -1191,4 +1191,3 @@ except Exception as e:
     st.error(f"Download failed: {e}")
 
 st.markdown("---")
-
