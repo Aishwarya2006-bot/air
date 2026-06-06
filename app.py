@@ -864,83 +864,80 @@ Result: {strongest_row['Significance']}
         st.error(f"Interpretation failed: {e}")
 
 # =====================================================
-# TAB 4: PATTERN RECOGNITION & PREDICTION
-# =====================================================
-
+# TAB 4: PATTERN RECOGNITION & PREDICTION # =====================================================
 with tab4:
     st.header("🤖 Pattern Recognition & Prediction Sandbox")
-    st.markdown(
-        """
-        Advanced Analytics Modules
-
-        • KMeans Clustering
-        • Pattern Recognition
-        • Anomaly Detection
-        • Environmental Event Detection
-        • Machine Learning Forecasting
-        • Feature Importance
-        • Future Predictions
-        """
-    )
+    st.markdown("""
+    Advanced Analytics Modules
+    • KMeans Clustering
+    • Pattern Recognition
+    • Anomaly Detection
+    • Environmental Event Detection
+    • Machine Learning Forecasting
+    • Feature Importance
+    • Future Predictions
+    """)
     st.markdown("---")
 
-# ================================================= #
-# KMEANS PATTERN RECOGNITION
-# ================================================= #
-st.subheader("🎯 Pattern Recognition")
-try:
-    # 1. Safely isolate numeric data from your merged dataframe
-    numeric_df = merged_df.drop(columns=['date'], errors='ignore').select_dtypes(include=np.number)
-    
-    # 2. Drop rows that are completely empty
-    numeric_df = numeric_df.dropna(thresh=max(1, int(numeric_df.shape[1] * 0.5)))
-    
-    # 3. Securely patch any residual NaNs with column means so KMeans never fails
-    numeric_df = numeric_df.fillna(numeric_df.mean())
+    # =================================================
+    # 🔥 MASTER CLEANING LAYER FOR TAB 4
+    # =================================================
+    # Create a completely safe, imputed dataframe for all Tab 4 ML modules
+    tab4_clean_df = merged_df.copy()
+    for col in tab4_clean_df.columns:
+        if col.lower() != "date" and pd.api.types.is_numeric_dtype(tab4_clean_df[col]):
+            tab4_clean_df[col] = tab4_clean_df[col].fillna(tab4_clean_df[col].mean())
 
-    if numeric_df.shape[1] > 0 and numeric_df.shape[0] >= 4:
-        # Prepare data for clustering
-        scaler = StandardScaler()
-        scaled_data = scaler.fit_transform(numeric_df)
+    # =================================================
+    # KMEANS PATTERN RECOGNITION
+    # =================================================
+    st.subheader("🎯 Pattern Recognition")
+    try:
+        # Isolate numeric columns from our freshly sanitized dataframe
+        numeric_df = tab4_clean_df.drop(columns=['date'], errors='ignore').select_dtypes(include=np.number)
         
-        # Build KMeans model
-        kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
-        clusters = kmeans.fit_predict(scaled_data)
-        
-        # Create clustered dataframe
-        clustered_df_result = numeric_df.copy()
-        clustered_df_result["Cluster"] = clusters
-        
-        # Generate cluster profiles
-        cluster_profiles = (clustered_df_result
-                            .groupby("Cluster")
-                            .mean(numeric_only=True))
-        
-        # Anomaly detection
-        isolation_model = IsolationForest(contamination=0.05, random_state=42)
-        anomaly_flags = isolation_model.fit_predict(scaled_data)
-        anomaly_scores = isolation_model.score_samples(scaled_data)
-        
-        anomaly_df = clustered_df_result.copy()
-        anomaly_df["Anomaly"] = anomaly_flags
-        anomaly_df["Anomaly_Score"] = anomaly_scores
-        
-        # Store results in session state
-        st.session_state.pattern_results = {
-            "clustered_data": clustered_df_result,
-            "cluster_profiles": cluster_profiles,
-            "anomaly_data": anomaly_df,
-            "kmeans_model": kmeans,
-            "scaler": scaler
-        }
-        st.session_state.clustered_df = clustered_df_result
-        st.success("Pattern recognition completed.")
-        st.dataframe(cluster_profiles, use_container_width=True)
-    else:
-        st.warning("Insufficient numeric features or data available for clustering. Need at least 4 rows and 1 numeric column.")
-except Exception as e:
-    st.error(f"Pattern recognition failed: {e}")
-    st.markdown("---")
+        if numeric_df.shape[1] > 0 and numeric_df.shape[0] >= 4:
+            # Prepare data for clustering
+            scaler = StandardScaler()
+            scaled_data = scaler.fit_transform(numeric_df)
+            
+            # Build KMeans model
+            kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
+            clusters = kmeans.fit_predict(scaled_data)
+            
+            # Create clustered dataframe
+            clustered_df_result = numeric_df.copy()
+            clustered_df_result["Cluster"] = clusters
+            
+            # Generate cluster profiles
+            cluster_profiles = (clustered_df_result
+                                .groupby("Cluster")
+                                .mean(numeric_only=True))
+            
+            # Anomaly detection
+            isolation_model = IsolationForest(contamination=0.05, random_state=42)
+            anomaly_flags = isolation_model.fit_predict(scaled_data)
+            anomaly_scores = isolation_model.score_samples(scaled_data)
+            
+            anomaly_df = clustered_df_result.copy()
+            anomaly_df["Anomaly"] = anomaly_flags
+            anomaly_df["Anomaly_Score"] = anomaly_scores
+            
+            # Store results in session state
+            st.session_state.pattern_results = {
+                "clustered_data": clustered_df_result,
+                "cluster_profiles": cluster_profiles,
+                "anomaly_data": anomaly_df,
+                "kmeans_model": kmeans,
+                "scaler": scaler
+            }
+            st.session_state.clustered_df = clustered_df_result
+            st.success("Pattern recognition completed.")
+            st.dataframe(cluster_profiles, use_container_width=True)
+        else:
+            st.warning("Insufficient numeric features or data available for clustering. Need at least 4 rows and 1 numeric column.")
+    except Exception as e:
+        st.error(f"Pattern recognition failed: {e}")
 
     # =================================================
     # CLUSTER VISUALIZATION
@@ -1044,18 +1041,15 @@ except Exception as e:
 
     st.markdown("---")
 
-    # =================================================
-    # ENVIRONMENTAL EVENTS
-    # =================================================
-
-    st.subheader("🌍 Environmental Event Detection")
-
-    try:
-        numeric_events_df = merged_df.select_dtypes(include=np.number)
-
-        if not numeric_events_df.empty:
-            events = environmental_event_detector(numeric_events_df)
-
+   # ================================================= #
+# ENVIRONMENTAL EVENTS
+# ================================================= #
+st.subheader("🌍 Environmental Event Detection")
+try:
+    # Changed from merged_df to tab4_clean_df to prevent background NaN crashes
+    numeric_events_df = tab4_clean_df.select_dtypes(include=np.number) 
+    if not numeric_events_df.empty:
+        events = environmental_event_detector(numeric_events_df)
             if not events.empty:
                 st.dataframe(events.head(20), use_container_width=True)
             else:
