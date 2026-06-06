@@ -86,7 +86,7 @@ if "forecast_df" not in st.session_state:
 # TITLE
 # =====================================================
 
-st.title("🌍 Urban Air Quality Correlation Engine")
+st.title("🌍 EcoPulse")
 
 st.markdown(
     """
