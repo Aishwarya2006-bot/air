@@ -69,7 +69,7 @@ if "pattern_results" not in st.session_state:
     
 if "model" not in st.session_state:
     st.session_state.model = None
-    
+
 if "metrics" not in st.session_state:
     st.session_state.metrics = None
     
